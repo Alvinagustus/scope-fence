@@ -87,7 +87,7 @@ Until it is listed, install from the repository: `hermes plugins install Alvinag
 
 | Part | Behaviour |
 |---|---|
-| Auto-scope | With no scope declared, the git root of the session CWD (`git rev-parse --show-toplevel`) becomes the scope. Falls back to the process CWD on the first call. Never auto-scopes to a filesystem root or `$HOME`. A failed attempt is retried after 60 seconds. |
+| Auto-scope | With no scope declared, the git root of the session CWD (`git rev-parse --show-toplevel`) becomes the scope. Uses the tracked terminal CWD, or the process CWD when none is tracked. Never auto-scopes to a filesystem root or `$HOME`. A failed attempt is retried after 60 seconds. |
 | `pre_tool_call` | Checks `write_file`, `patch`, `skill_manage` writes and `terminal` commands. Wrapper commands (`env`, `sudo`, `nohup`, `eval`, ...) are unwrapped before classification. |
 | Patch headers | `patch` targets are read from the V4A headers Hermes itself parses: `*** Add File:`, `*** Update File:`, `*** Delete File:` and `*** Move File: a -> b` (both sides checked). Hermes does not accept a standard unified diff (`--- a/` / `+++ b/`), so that form is not parsed. |
 | Deny-list | `~/.ssh`, `~/.env`, `~/.aws`, `~/.gnupg`, `~/.config`, shell rc files and `~/.hermes` are never writable: inside scope, with no scope, in both modes, and while the circuit breaker is open. |
@@ -121,8 +121,8 @@ plugins:
         replace_default_deny: false   # true: deny_paths replaces the defaults
         extra_write_paths: ["/tmp", "$TMPDIR", "~/.cache"]
         replace_default_extra_write_paths: false  # true: extra_write_paths replaces the defaults
-        block_unparseable_destructive: true
-        allow_reads_outside_scope: true
+        block_unparseable_destructive: true   # block destructive commands whose target cannot be verified
+        allow_reads_outside_scope: true       # false: gate read_file / search_files too
         allow_skill_writes: false     # true: skill_manage skips the scope check (deny-list still applies)
         max_scope_paths: 8
         auto_scope: true
