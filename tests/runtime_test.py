@@ -75,6 +75,9 @@ def check(label, got, want):
 
 
 def main():
+    # Run from a directory that is not a git repo: otherwise auto-scope engages to the
+    # surrounding checkout and the "fence inactive" assertions no longer hold.
+    os.chdir(BASE)
     print(f"HERMES_HOME = {HOME}")
     manager = PluginManager(scope_key=HOME)
     manifests = manager._scan_directory(__import__("pathlib").Path(PLUGINS), source="user")

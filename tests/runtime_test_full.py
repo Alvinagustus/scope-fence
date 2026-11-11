@@ -93,6 +93,9 @@ def fresh_manager():
 
 
 def main():
+    # Run from a directory that is not a git repo: otherwise auto-scope engages to the
+    # surrounding checkout and the "fence inactive" assertions no longer hold.
+    os.chdir(BASE)
     sid = "full-test"
     print(f"HERMES_HOME = {HOME}")
     manager = fresh_manager()

@@ -26,10 +26,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install pytest
+        run: python -m pip install --quiet pytest
+
       - name: Run tests
         run: cd tests && python -m pytest -q
         env:
-          # The suite needs no network access.
+          # The suite itself needs no network access.
           PIP_NO_INDEX: "1"
 
   windows:
@@ -45,6 +48,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+
+      - name: Install pytest
+        run: python -m pip install --quiet pytest
 
       - name: Run tests
         run: cd tests && python -m pytest -q -rs
