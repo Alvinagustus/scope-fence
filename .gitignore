@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+data.db
+plugin-data/
+*.mp4
+*.gif
+*.mov
+demo_script.sh
+make_demo*.py
+*.log
+.DS_Store
+Thumbs.db
+.pytest_cache/

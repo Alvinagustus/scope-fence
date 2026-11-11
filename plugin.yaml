@@ -1,0 +1,67 @@
+name: scope-fence
+version: "0.1.0"
+manifest_version: 2
+kind: standalone
+description: "Guardrail against agent mistakes: blocks write_file, patch, skill_manage writes and destructive terminal commands whose resolved target falls outside the declared scope. Realpath-aware (symlinks, traversal, relative paths resolve against session CWD). Deny-list is always enforced. Auto-scopes to git root; audit log via /scope check. Stdlib-only."
+author: "Alvinagustus"
+license: "MIT"
+homepage: "https://github.com/Alvinagustus/scope-fence"
+tags: [security, guardrail, filesystem, write-fence, agent-safety]
+requires_hermes: ">=0.22.6"
+config_schema:
+  deny_paths:
+    type: list
+    default: ["~/.ssh", "~/.env", "~/.aws", "~/.gnupg", "~/.config", "~/.bashrc", "~/.zshrc", "~/.profile", "~/.hermes"]
+    description: "Paths that are never writable, even inside scope. User entries are additive over defaults unless replace_default_deny is true."
+  replace_default_deny:
+    type: boolean
+    default: false
+    description: "If true, deny_paths replaces the built-in defaults instead of extending them."
+  block_unparseable_destructive:
+    type: boolean
+    default: true
+    description: "Block destructive terminal commands whose target path cannot be verified against the scope."
+  allow_reads_outside_scope:
+    type: boolean
+    default: true
+    description: "Allow read_file and search_files outside the declared scope. Set false to gate reads too."
+  allow_skill_writes:
+    type: boolean
+    default: false
+    description: "Allow skill_manage writes without scope check. Deny-list is still enforced."
+  max_scope_paths:
+    type: integer
+    default: 8
+    description: "Maximum number of scope root paths per session."
+  auto_scope:
+    type: boolean
+    default: true
+    description: "Automatically scope to the git root of the session CWD on first tool call."
+  deny_by_default:
+    type: boolean
+    default: false
+    description: "Block all writes when no scope is declared (instead of allowing everything)."
+  strict_mode:
+    type: boolean
+    default: false
+    description: "Block destructive commands even when their target is inside the declared scope."
+  extra_write_paths:
+    type: list
+    default: ["/tmp", "$TMPDIR", "~/.cache"]
+    description: "Extra directories treated as writable (scratch/build output). Expanded (~ and env vars) and realpathed; filesystem roots and $HOME are rejected. User entries are additive over defaults unless replace_default_extra_write_paths is true. Deny-list still wins. Never used for auto-scope."
+  replace_default_extra_write_paths:
+    type: boolean
+    default: false
+    description: "If true, extra_write_paths replaces the built-in defaults instead of extending them."
+  mode:
+    type: string
+    default: "enforce"
+    description: "enforce blocks violations; warn lets them through but records an audit row (would-block:<reason>) and logs a warning. The deny-list is enforced in both modes."
+provides_hooks:
+  - pre_tool_call
+  - post_tool_call
+  - on_session_finalize
+  - on_session_reset
+  - post_compaction
+provides_tools: []
+capabilities: []

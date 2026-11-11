@@ -1,0 +1,64 @@
+name: tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"     # every Monday: catch what a new Hermes release changed
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run tests
+        run: cd tests && python -m pytest -q
+        env:
+          # The suite needs no network access.
+          PIP_NO_INDEX: "1"
+
+  windows:
+    # Windows path handling: drive letters, case-insensitive containment, separators.
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Run tests
+        run: cd tests && python -m pytest -q -rs
+        env:
+          PIP_NO_INDEX: "1"
+
+  runtime:
+    # The plugin loaded through Hermes's own PluginManager, in the official image.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Runtime test in the official Hermes image
+        run: |
+          docker run --rm -v "$PWD:/plugin:ro" \
+            -e HERMES_SRC=/hermes \
+            nousresearch/hermes-agent:latest \
+            bash -lc "cp -r /plugin /tmp/plugin && cd /tmp/plugin/tests && HERMES_SRC=/hermes python runtime_test_full.py"
